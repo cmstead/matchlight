@@ -4,13 +4,16 @@
     if (isNode) {
         module.exports = moduleFactory();
     } else {
-        window.matchlight = moduleFactory();
+        window.matchlightFactory = moduleFactory();
     }
 
 })(function () {
     'use strict';
 
     return function matchlightFactory(signet) {
+
+        try { signet.isTypeOf('string')('test'); }
+        catch (e) { throw new Error('Matchlight require signet to function!'); }
 
         var isArray = signet.isTypeOf('array');
         var isFunction = signet.isTypeOf('function');
