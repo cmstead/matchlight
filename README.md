@@ -55,6 +55,31 @@ assert.equal(result, 'quux');
 
 ```
 
+Array matching with '...rest' (rest type):
+
+```
+var testData = [1, 2, 3, 4, 5];
+
+let result = matchlight.match(testData, function (matchCase, _, byType) {
+    matchCase([1, 2, 3, 4], ([x]) => x);
+    matchCase([1, 2, 3, byType('...rest')], ([,,, ...rest]) => rest);
+});
+
+assert.equal(JSON.stringify(result), '[4,5]');
+```
+
+Array matching with '...' (seek type):
+
+```
+var testData = [1, 2, 3, 4, 5];
+
+let result = matchlight.match(testData, function (matchCase, _, byType) {
+    matchCase([1, 2, byType('...'), 5], ([,,,,x]) => x);
+});
+
+assert.equal(result, 5);
+```
+
 ## API ##
 
 Matchlight has a single API endpoint: match. Match exposes three functions, matchCase, matchDefault and byType which allow the developer to construct rich type mapping and behaviors.  The contracts are as follows:
@@ -63,6 +88,9 @@ Matchlight has a single API endpoint: match. Match exposes three functions, matc
 - matchCase -- `matchValue:*, matchAction:function => undefined`
 - matchDefault -- `matchAction:function => undefined`
 - byType -- `typeToCheck:type => value:* => boolean`
+    - Special type checks
+        - '...rest' -- Rest type: checks array values until rest check, allows for any number of tail values
+        - '...' -- Seek type: seeks through array until next check passes, fails if no match is found
 
 ## Built-in Signet Types ##
 
