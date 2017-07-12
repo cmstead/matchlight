@@ -18,6 +18,7 @@
         var isArray = signet.isTypeOf('array');
         var isFunction = signet.isTypeOf('function');
         var isObject = signet.isTypeOf('object');
+        var isString = signet.isTypeOf('string');
 
         function alwaysTrue() {
             return true;
@@ -43,13 +44,50 @@
             });
         }
 
+        function seekCheck(valueSet, currentCheck) {
+            var valueOk = false;
+
+            while (!valueOk) {
+                valueOk = currentCheck(valueSet.shift());
+            }
+
+            return valueOk;
+        }
+
+        function getCheckAction(checkTuple, valueSet, seeking) {
+            return seeking
+                ? seekCheck.bind(null, valueSet, checkTuple.check)
+                : checkTuple.check.bind(null, valueSet.shift());
+        }
+
+        function checkArrayValues(valueChecks, values) {
+            var valueSet = values.slice(0);
+            var valuesOk = true;
+            var seeking = false;
+
+            valueChecks.forEach(function (checkTuple) {
+                var restFound = checkTuple.check.isRest;
+                var checkAction = getCheckAction(checkTuple, valueSet, seeking);
+
+                seeking = checkTuple.check.isSeek ? true : seeking;
+
+                if (valuesOk && valueSet.length > 0 && !checkTuple.check.isSeek) {
+                    seeking = false;
+                    valuesOk = restFound ? true : checkAction();
+                    valueSet.length = restFound ? 0 : valueSet.length;
+                }
+            });
+
+            return valuesOk && valueSet.length === 0;
+        }
+
         function buildArrayCheck(matchValues) {
             var valueChecks = buildValueChecks(matchValues);
 
             return function (userValue) {
+
                 return isArray(userValue)
-                    && userValue.length === valueChecks.length
-                    && checkObjectValues(valueChecks, userValue);
+                    && checkArrayValues(valueChecks, userValue);
             };
         }
 
@@ -111,11 +149,36 @@
             });
         }
 
+        function buildActionType(idProperty) {
+            function actionType() { return false; }
+
+            Object.defineProperty(actionType, idProperty, {
+                writeable: false,
+                value: true
+            });
+
+            return actionType;
+        }
+
+        var actionIdMap = {
+            '...rest': 'isRest',
+            '...': 'isSeek'
+        }
+
+        var byType = signet.enforce(
+            'variant<string, type, function> => function',
+            function byType(type) {
+                var actionId = actionIdMap[type];
+                return isString(actionId)
+                    ? buildActionType(actionId)
+                    : signet.isTypeOf(type);
+            });
+
         function runMatcher(caseWrapper, cases, valueUnderTest) {
             caseWrapper(
                 matchCaseFactory(cases),
                 matchDefaultFactory(cases),
-                signet.isTypeOf
+                byType
             );
 
             return getPassingCases(cases, valueUnderTest);
@@ -140,10 +203,10 @@
             match: signet.enforce(
                 'valueUnderTest:*, ' +
                 'caseWrapper:function<' +
-                    'function, ' +
-                    '[function] ' +
-                    '[function] ' +
-                    '=> undefined' +
+                'function, ' +
+                '[function] ' +
+                '[function] ' +
+                '=> undefined' +
                 '>' +
                 '=> *',
                 matcher)

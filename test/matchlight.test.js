@@ -84,31 +84,55 @@ describe('matchlight', function () {
         it('should match against an array of values', function () {
             let result = matchlight.match([4, [5]], function (matchCase, _, byType) {
                 matchCase([4], ([x]) => x);
-                matchCase([byType('int'), [5]], ([, [x]]) => x);
+                matchCase([byType('int'), [5]], ([, x]) => x[0]);
             });
 
             assert.equal(result, 5);
         });
 
         it('should match against an object', function () {
-            let result = matchlight.match({ test: [1], foo: { bar: 'quux' } }, function (matchCase, _, byType) {
-                matchCase({ test: 1 }, ({test}) => test);
-                matchCase({ test: [byType('number')], foo: { bar: 'quux' } }, ({foo: {bar}}) => bar);
+            let testData = { test: [1], foo: { bar: 'quux' } }
+            let result = matchlight.match(testData, function (matchCase, _, byType) {
+                matchCase({ test: 1 }, ({ test }) => test);
+
+                const nestedCase = { test: [byType('number')], foo: { bar: 'quux' } };
+                matchCase(nestedCase, ({ foo }) => foo.bar);
             });
 
             assert.equal(result, 'quux');
         });
 
         it('should allow for fibonacci computation', function () {
-            function fib (n) {
+            function fib(n) {
                 return matchlight.match(n, function (matchCase, matchDefault) {
                     matchCase(0, () => 1);
                     matchCase(1, () => 1);
-                    matchDefault(() => fib(n-1) + fib(n-2));
+                    matchDefault(() => fib(n - 1) + fib(n - 2));
                 });
             }
 
             assert.equal(fib(10), 89);
+        });
+
+        it('should support rest type for arrays', function () {
+            var testData = [1, 2, 3, 4, 5];
+
+            let result = matchlight.match(testData, function (matchCase, _, byType) {
+                matchCase([1, 2, 3, 4], ([x]) => x);
+                matchCase([1, 2, 3, byType('...rest')], ([,,, ...rest]) => rest);
+            });
+
+            assert.equal(JSON.stringify(result), '[4,5]');
+        });
+
+        it('should support seek type for arrays', function () {
+            var testData = [1, 2, 3, 4, 5];
+
+            let result = matchlight.match(testData, function (matchCase, _, byType) {
+                matchCase([1, 2, byType('...'), 5], ([,,,,x]) => x);
+            });
+
+            assert.equal(result, 5);
         });
 
     });
