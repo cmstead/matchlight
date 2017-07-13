@@ -67,11 +67,11 @@
 
             valueChecks.forEach(function (checkTuple) {
                 var restFound = checkTuple.check.isRest;
-                var checkAction = getCheckAction(checkTuple, valueSet, seeking);
 
                 seeking = checkTuple.check.isSeek ? true : seeking;
 
                 if (valuesOk && valueSet.length > 0 && !checkTuple.check.isSeek) {
+                    var checkAction = getCheckAction(checkTuple, valueSet, seeking);
                     seeking = false;
                     valuesOk = restFound ? true : checkAction();
                     valueSet.length = restFound ? 0 : valueSet.length;
@@ -199,6 +199,11 @@
             return passingCases[0][1](valueUnderTest);
         }
 
+        function matchArguments(argumentsObj, caseWrapper) {
+            var args = Array.prototype.slice.call(argumentsObj, 0);
+            return matcher(args, caseWrapper);
+        }
+
         return {
             match: signet.enforce(
                 'valueUnderTest:*, ' +
@@ -209,7 +214,17 @@
                 '=> undefined' +
                 '>' +
                 '=> *',
-                matcher)
+                matcher),
+            matchArguments: signet.enforce(
+                'arguments:arguments, ' +
+                'caseWrapper:function<' +
+                'function, ' +
+                '[function] ' +
+                '[function] ' +
+                '=> undefined' +
+                '>' +
+                '=> *',
+                matchArguments)
         }
     }
 });

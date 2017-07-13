@@ -119,7 +119,7 @@ describe('matchlight', function () {
 
             let result = matchlight.match(testData, function (matchCase, _, byType) {
                 matchCase([1, 2, 3, 4], ([x]) => x);
-                matchCase([1, 2, 3, byType('...rest')], ([,,, ...rest]) => rest);
+                matchCase([1, 2, 3, byType('...rest')], ([, , , ...rest]) => rest);
             });
 
             assert.equal(JSON.stringify(result), '[4,5]');
@@ -129,10 +129,40 @@ describe('matchlight', function () {
             var testData = [1, 2, 3, 4, 5];
 
             let result = matchlight.match(testData, function (matchCase, _, byType) {
-                matchCase([1, 2, byType('...'), 5], ([,,,,x]) => x);
+                matchCase([1, 2, byType('...'), 5], ([, , , , x]) => x);
             });
 
             assert.equal(result, 5);
+        });
+
+        it('should properly check a single-valued, typed array', function () {
+            function test() {
+                return matchlight.match(['foo'], function (matchCase, _, byType) {
+                    matchCase([byType('number')], () => 'no');
+                });
+            }
+
+            assert.throws(test);
+        });
+
+    });
+
+    describe('matchArguments', function () {
+
+        it('should match against function arguments', function () {
+            function add() {
+                return matchlight.matchArguments(arguments, function (matchCase, matchDefault, byType) {
+                    matchCase([byType('number')], ([a]) => b => a + b);
+                    matchCase([byType('number'), byType('number')], ([a, b]) => a + b);
+                    matchCase(byType('array<number>'), (values) => values.reduce((sum, value) => sum + value, 0));
+                    matchDefault(() => { throw new Error('Add can only accept numbers.'); });
+                });
+            }
+
+            assert.equal(add(5)(6), 11);
+            assert.equal(add(6, 7), 13);
+            assert.equal(add(1, 3, 5), 9);
+            assert.throws(add.bind(null, 'foo'), 'Add can only accept numbers.');
         });
 
     });

@@ -80,11 +80,25 @@ let result = matchlight.match(testData, function (matchCase, _, byType) {
 assert.equal(result, 5);
 ```
 
+Matchlight has a matchArguments function. This means you can use matchlight to handle optional arguments, variadic and multivariate functions with ease! You can match on arguments with matchArguments like the following:
+
+```
+function add() {
+    return matchlight.matchArguments(arguments, function (matchCase, matchDefault, byType) {
+        matchCase([byType('number')], ([a]) => b => a + b);
+        matchCase([byType('number'), byType('number')], ([a, b]) => a + b);
+        matchCase(byType('array<number>'), (values) => values.reduce((sum, value) => sum + value, 0));
+        matchDefault(() => { throw new Error('Add can only accept numbers.'); });
+    });
+}
+```
+
 ## API ##
 
-Matchlight has a single API endpoint: match. Match exposes three functions, matchCase, matchDefault and byType which allow the developer to construct rich type mapping and behaviors.  The contracts are as follows:
+Matchlight has a two API endpoints: match and matchArguments. Both of these expose three functions, matchCase, matchDefault and byType which allow the developer to construct rich type mapping and behaviors.  The contracts are as follows:
 
 - match -- `valueUnderTest:*, caseWrapper:function<function, [function], [function] => undefined> => *`
+- matchArguments -- `arguments:arguments, caseWrapper:function<function, [function], [function] => undefined> => *`
 - matchCase -- `matchValue:*, matchAction:function => undefined`
 - matchDefault -- `matchAction:function => undefined`
 - byType -- `typeToCheck:type => value:* => boolean`
