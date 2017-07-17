@@ -1,5 +1,5 @@
 (function (moduleFactory) {
-    let isNode = typeof module !== undefined && typeof module.exports !== undefined
+    var isNode = typeof module !== undefined && typeof module.exports !== undefined
 
     if (isNode) {
         module.exports = moduleFactory();
