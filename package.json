@@ -1,6 +1,6 @@
 {
   "name": "matchlight",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A rich pattern matching library to light up your code",
   "main": "index.js",
   "scripts": {
@@ -37,9 +37,12 @@
   "devDependencies": {
     "approvals": "^2.1.2",
     "approvals-config-factory": "^1.0.0",
+    "babel": "^6.23.0",
+    "babel-preset-env": "^1.6.0",
     "chai": "^3.5.0",
     "eslint": "^3.19.0",
     "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^3.0.1",
     "gulp-istanbul": "^1.1.1",

@@ -169,9 +169,7 @@
             'variant<string, type, function> => function',
             function byType(type) {
                 var actionId = actionIdMap[type];
-                return isString(actionId)
-                    ? buildActionType(actionId)
-                    : signet.isTypeOf(type);
+                return isString(actionId) ? buildActionType(actionId) : signet.isTypeOf(type);
             });
 
         function runMatcher(caseWrapper, cases, valueUnderTest) {

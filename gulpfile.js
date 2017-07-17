@@ -5,6 +5,7 @@ const mocha = require('gulp-mocha');
 const istanbul = require('gulp-istanbul');
 const eslint = require('gulp-eslint');
 var concat = require('gulp-concat');
+const babel = require('gulp-babel');
 
 const sourceFiles = [
     'bin/**/*.js',
@@ -16,6 +17,14 @@ const sourceFiles = [
 const testFiles = [
     'test/**/*.js'
 ];
+
+gulp.task('babel', () => {
+    return gulp.src('dist/matchlight.js')
+        .pipe(babel({
+            presets: ['env']
+        }))
+        .pipe(gulp.dest('dist'));
+});
 
 gulp.task('compile', function() {
   return gulp.src(sourceFiles)
@@ -43,4 +52,4 @@ gulp.task('test', ['lint', 'pre-test'], function () {
         .pipe(istanbul.enforceThresholds({ thresholds: { global: 80 } }));
 });
 
-gulp.task('build', ['test', 'compile']);
+gulp.task('build', ['test', 'compile', 'babel']);
