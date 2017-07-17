@@ -1,7 +1,5 @@
 (function (moduleFactory) {
-    var isNode = typeof module !== undefined && typeof module.exports !== undefined
-
-    if (isNode) {
+    if (typeof require === 'function') {
         module.exports = moduleFactory();
     } else {
         window.matchlightFactory = moduleFactory();
