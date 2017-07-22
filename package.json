@@ -1,60 +1,63 @@
 {
-  "name": "matchlight",
-  "version": "1.2.4",
-  "description": "A rich pattern matching library to light up your code",
-  "main": "index.js",
-  "scripts": {
-    "test": "gulp test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cmstead/matchlight.git"
-  },
-  "keywords": [],
-  "quokka": {
-    "plugins": [
-      "quokka-mocha-bdd",
-      "quokka-signet-explorer",
-      "quokka-prerun"
-    ],
-    "quokka-mocha-bdd": {
-      "interface": "bdd"
+    "name": "matchlight",
+    "version": "1.2.5",
+    "description": "A rich pattern matching library to light up your code",
+    "main": "index.js",
+    "scripts": {
+        "test": "gulp test"
     },
-    "quokka-prerun": {
-      "prerunCommands": []
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cmstead/matchlight.git"
+    },
+    "engines": {
+        "node": ">=6.0.0"
+    },
+    "keywords": [],
+    "quokka": {
+        "plugins": [
+            "quokka-mocha-bdd",
+            "quokka-signet-explorer",
+            "quokka-prerun"
+        ],
+        "quokka-mocha-bdd": {
+            "interface": "bdd"
+        },
+        "quokka-prerun": {
+            "prerunCommands": []
+        }
+    },
+    "author": "Chris Stead",
+    "license": "MPL-2.0",
+    "bugs": {
+        "url": "https://github.com/cmstead/matchlight/issues"
+    },
+    "homepage": "https://github.com/cmstead/matchlight#readme",
+    "dependencies": {
+        "signet": "^3.13.0",
+        "sinon": "^2.2.0"
+    },
+    "devDependencies": {
+        "approvals": "^2.1.2",
+        "approvals-config-factory": "^1.0.0",
+        "babel": "^6.23.0",
+        "babel-preset-env": "^1.6.0",
+        "chai": "^3.5.0",
+        "eslint": "^3.19.0",
+        "gulp": "^3.9.1",
+        "gulp-babel": "^6.1.2",
+        "gulp-concat": "^2.6.1",
+        "gulp-eslint": "^3.0.1",
+        "gulp-istanbul": "^1.1.1",
+        "gulp-mocha": "^3.0.1",
+        "karma": "^1.7.0",
+        "karma-mocha": "^1.3.0",
+        "karma-phantomjs-launcher": "^1.0.4",
+        "karma-sinon": "^1.0.5",
+        "mocha": "^3.4.1",
+        "quokka-mocha-approvals-helper": "^1.0.0",
+        "quokka-mocha-bdd": "^1.3.0",
+        "quokka-prerun": "^1.0.0",
+        "quokka-signet-explorer": "^1.2.0"
     }
-  },
-  "author": "Chris Stead",
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/cmstead/matchlight/issues"
-  },
-  "homepage": "https://github.com/cmstead/matchlight#readme",
-  "dependencies": {
-    "signet": "^3.13.0",
-    "sinon": "^2.2.0"
-  },
-  "devDependencies": {
-    "approvals": "^2.1.2",
-    "approvals-config-factory": "^1.0.0",
-    "babel": "^6.23.0",
-    "babel-preset-env": "^1.6.0",
-    "chai": "^3.5.0",
-    "eslint": "^3.19.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-concat": "^2.6.1",
-    "gulp-eslint": "^3.0.1",
-    "gulp-istanbul": "^1.1.1",
-    "gulp-mocha": "^3.0.1",
-    "karma": "^1.7.0",
-    "karma-mocha": "^1.3.0",
-    "karma-phantomjs-launcher": "^1.0.4",
-    "karma-sinon": "^1.0.5",
-    "mocha": "^3.4.1",
-    "quokka-mocha-approvals-helper": "^1.0.0",
-    "quokka-mocha-bdd": "^1.3.0",
-    "quokka-prerun": "^1.0.0",
-    "quokka-signet-explorer": "^1.2.0"
-  }
 }
