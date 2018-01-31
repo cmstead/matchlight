@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/cmstead/matchlight#readme",
   "dependencies": {
-    "signet": "^4.0.1",
+    "signet": "^6.5.3",
     "sinon": "^2.2.0"
   },
   "devDependencies": {

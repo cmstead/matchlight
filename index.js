@@ -215,7 +215,7 @@
                 'arguments:arguments, ' +
                 'caseWrapper:function<' +
                 'function, ' +
-                '[function] ' +
+                '[function], ' +
                 '[function] ' +
                 '=> undefined' +
                 '>' +
