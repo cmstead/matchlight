@@ -2,7 +2,7 @@
 
 const assert = require('chai').assert;
 const {
-    byMatcher,
+    matcher,
     match,
     matchArguments,
     types: { NUMBER, STRING, ARRAY }
@@ -112,7 +112,7 @@ describe('matchlight', function () {
 
             let result = match(testData, function (on) {
                 on([1, 2, 3, 4], ([x]) => x);
-                on([1, 2, 3, byMatcher('...rest')], ([, , , ...rest]) => rest);
+                on([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
             });
 
             assert.equal(JSON.stringify(result), '[4,5]');
@@ -122,7 +122,7 @@ describe('matchlight', function () {
             var testData = [1, 2, 3, 4, 5];
 
             let result = match(testData, function (on) {
-                on([1, 2, byMatcher('...'), 5], ([, , , , x]) => x);
+                on([1, 2, matcher('...'), 5], ([, , , , x]) => x);
             });
 
             assert.equal(result, 5);

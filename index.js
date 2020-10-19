@@ -9,9 +9,16 @@ function checkObjectValues(valueChecks, values) {
 }
 
 function buildValueChecks(matchValues) {
-    return Object.keys(matchValues).map(function (key) {
-        return { key: key, check: getCaseCheck(matchValues[key]) };
-    });
+    let valueChecks = [];
+    const keys = Object.keys(matchValues);
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+
+        valueChecks.push({ key: key, check: getCaseCheck(matchValues[key]) });
+    }
+
+    return valueChecks;
 }
 
 function seekCheck(valueSet, currentCheck) {
@@ -35,7 +42,8 @@ function checkArrayValues(valueChecks, values) {
     var valuesOk = true;
     var seeking = false;
 
-    valueChecks.forEach(function (checkTuple) {
+    for (let i = 0; i < valueChecks.length; i++) {
+        const checkTuple = valueChecks[i];
         var restFound = checkTuple.check.isRest;
 
         seeking = checkTuple.check.isSeek ? true : seeking;
@@ -46,7 +54,7 @@ function checkArrayValues(valueChecks, values) {
             valuesOk = restFound ? true : checkAction();
             valueSet.length = restFound ? 0 : valueSet.length;
         }
-    });
+    }
 
     return valuesOk && valueSet.length === 0;
 }
@@ -115,10 +123,16 @@ function matchDefaultFactory(cases) {
     };
 }
 
-function getPassingCases(cases, valueUnderTest) {
-    return cases.filter(function (caseTuple) {
-        return caseTuple[0](valueUnderTest);
-    });
+function getPassingCase(cases, valueUnderTest) {
+    for (let i = 0; i < cases.length; i++) {
+        const caseTuple = cases[i];
+
+        if(caseTuple[0](valueUnderTest)) {
+            return caseTuple;
+        }
+    }
+
+    return null;
 }
 
 function buildActionType(idProperty) {
@@ -137,7 +151,7 @@ var actionIdMap = {
     '...': 'isSeek'
 }
 
-function byType(type) {
+function matcher(type) {
     var actionId = actionIdMap[type];
     return types.STRING(actionId) ? buildActionType(actionId) : type;
 }
@@ -150,7 +164,7 @@ function runMatcher(caseWrapper, valueUnderTest) {
         matchDefaultFactory(cases)
     );
 
-    return getPassingCases(cases, valueUnderTest);
+    return getPassingCase(cases, valueUnderTest);
 }
 
 function throwOnFailure(condition, errorMessage) {
@@ -159,23 +173,23 @@ function throwOnFailure(condition, errorMessage) {
     }
 }
 
-function matcher(valueUnderTest, caseWrapper) {
-    var passingCases = runMatcher(caseWrapper, valueUnderTest);
+function matchFn(valueUnderTest, caseWrapper) {
+    var passingCase = runMatcher(caseWrapper, valueUnderTest);
 
     var errorMessage = 'All cases failed, perhaps a default could be provided.';
-    throwOnFailure(passingCases.length > 0, errorMessage);
+    throwOnFailure(!types.NULL(passingCase), errorMessage);
 
-    return passingCases[0][1](valueUnderTest);
+    return passingCase[1](valueUnderTest);
 }
 
 function matchArguments(argumentsObj, caseWrapper) {
     var args = Array.prototype.slice.call(argumentsObj, 0);
-    return matcher(args, caseWrapper);
+    return matchFn(args, caseWrapper);
 }
 
 module.exports = {
-    byMatcher: byType,
-    match: matcher,
+    matcher,
+    match: matchFn,
     matchArguments,
     types
 }
