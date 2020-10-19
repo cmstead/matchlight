@@ -1,90 +1,85 @@
 'use strict';
 
-if (typeof exploreFunction !== 'function') {
-    require('quokka-signet-explorer').before();
-}
-
 const assert = require('chai').assert;
-const signet = require('signet')();
-const matchlightFactory = require('../index.js');
+const {
+    byMatcher,
+    match,
+    matchArguments,
+    types: { NUMBER, STRING, ARRAY }
+} = require('../index.js');
 
 describe('matchlight', function () {
-    require('./test-utils/approvals-config');
-
-    const matchlight = matchlightFactory(signet);
-
     describe('match', function () {
 
         it('should resolve first passing behavior', function () {
-            let result = matchlight.match('foo', matchCase => {
-                matchCase(() => false, () => 'ha!');
-                matchCase(() => true, () => 'woo!');
-                matchCase(() => true, () => 'blammo!');
+            let result = match('foo', on => {
+                on(() => false, () => 'ha!');
+                on(() => true, () => 'woo!');
+                on(() => true, () => 'blammo!');
             });
 
             assert.equal(result, 'woo!');
         });
 
         it('should throw an error if no cases pass', function () {
-            function failingCase(matchCase) {
-                matchCase(() => false, () => 'ha!');
-                matchCase(() => false, () => 'woo!');
-                matchCase(() => false, () => 'blammo!');
+            function failingCase(on) {
+                on(() => false, () => 'ha!');
+                on(() => false, () => 'woo!');
+                on(() => false, () => 'blammo!');
             }
 
             assert.throws(
-                matchlight.match.bind(null, 'foo', failingCase),
+                match.bind(null, 'foo', failingCase),
                 'All cases failed, perhaps a default could be provided.');
         });
 
         it('should call default action if no cases pass and default exists', function () {
-            let result = matchlight.match('foo', (matchCase, matchDefault) => {
-                matchCase(() => false, () => 'ha!');
-                matchCase(() => false, () => 'woo!');
-                matchCase(() => false, () => 'blammo!');
-                matchDefault(() => 'default!');
+            let result = match('foo', (on, orDefault) => {
+                on(() => false, () => 'ha!');
+                on(() => false, () => 'woo!');
+                on(() => false, () => 'blammo!');
+                orDefault(() => 'default!');
             });
 
             assert.equal(result, 'default!');
         });
 
         it('should call default action if no cases pass and default exists', function () {
-            function caseWrapper(matchCase, matchDefault) {
-                matchCase(() => false, () => 'ha!');
-                matchCase(() => false, () => 'woo!');
-                matchCase(() => false, () => 'blammo!');
-                matchDefault(() => 'default!');
-                matchDefault(() => 'default2!');
+            function caseWrapper(on, orDefault) {
+                on(() => false, () => 'ha!');
+                on(() => false, () => 'woo!');
+                on(() => false, () => 'blammo!');
+                orDefault(() => 'default!');
+                orDefault(() => 'default2!');
             }
 
             assert.throws(
-                matchlight.match.bind(null, 'foo', caseWrapper),
-                'Cannot call matchDefault more than once');
+                match.bind(null, 'foo', caseWrapper),
+                'Cannot match on more than one default');
         });
 
         it('should call action on type match', function () {
-            let result = matchlight.match(-3, function (matchCase, matchDefault, byType) {
-                matchCase(byType('leftBoundedInt<1>'), (value) => `${value} is a boundedInt`);
-                matchCase(byType('int'), (value) => `${value} is an int`);
-                matchCase(byType('number'), (value) => `${value} is a number`);
-                matchDefault(() => 'I got to the default');
+            let result = match(-3, function (on, orDefault) {
+                on(NUMBER, (value) => `${value} is a number`);
+                on(STRING, (value) => `${value} is a string`);
+                orDefault(() => 'I got to the default');
             });
 
-            assert.equal(result, '-3 is an int');
+            assert.equal(result, '-3 is a number');
         });
 
         it('should match against a primitive value', function () {
-            let result = matchlight.match(2, function (matchCase) {
-                matchCase(2, () => 'two');
+            let result = match(2, function (on) {
+                on(2, () => 'two');
             });
 
             assert.equal(result, 'two');
         });
 
         it('should match against an array of values', function () {
-            let result = matchlight.match([4, [5]], function (matchCase, _, byType) {
-                matchCase([4], ([x]) => x);
-                matchCase([byType('int'), [5]], ([, x]) => x[0]);
+            let result = match([4, [5]], function (on) {
+                on([4], ([x]) => x);
+                on([NUMBER, [5]], ([, x]) => x[0]);
             });
 
             assert.equal(result, 5);
@@ -92,11 +87,9 @@ describe('matchlight', function () {
 
         it('should match against an object', function () {
             let testData = { test: [1], foo: { bar: 'quux' } }
-            let result = matchlight.match(testData, function (matchCase, _, byType) {
-                matchCase({ test: 1 }, ({ test }) => test);
-
-                const nestedCase = { test: [byType('number')], foo: { bar: 'quux' } };
-                matchCase(nestedCase, ({ foo }) => foo.bar);
+            let result = match(testData, function (on) {
+                on({ test: 1 }, ({ test }) => test);
+                on({ test: [NUMBER], foo: { bar: 'quux' } }, ({ foo }) => foo.bar);
             });
 
             assert.equal(result, 'quux');
@@ -104,10 +97,10 @@ describe('matchlight', function () {
 
         it('should allow for fibonacci computation', function () {
             function fib(n) {
-                return matchlight.match(n, function (matchCase, matchDefault) {
-                    matchCase(0, () => 1);
-                    matchCase(1, () => 1);
-                    matchDefault(() => fib(n - 1) + fib(n - 2));
+                return match(n, function (on, orDefault) {
+                    on(0, () => 1);
+                    on(1, () => 1);
+                    orDefault(() => fib(n - 1) + fib(n - 2));
                 });
             }
 
@@ -117,9 +110,9 @@ describe('matchlight', function () {
         it('should support rest type for arrays', function () {
             var testData = [1, 2, 3, 4, 5];
 
-            let result = matchlight.match(testData, function (matchCase, _, byType) {
-                matchCase([1, 2, 3, 4], ([x]) => x);
-                matchCase([1, 2, 3, byType('...rest')], ([, , , ...rest]) => rest);
+            let result = match(testData, function (on) {
+                on([1, 2, 3, 4], ([x]) => x);
+                on([1, 2, 3, byMatcher('...rest')], ([, , , ...rest]) => rest);
             });
 
             assert.equal(JSON.stringify(result), '[4,5]');
@@ -128,8 +121,8 @@ describe('matchlight', function () {
         it('should support seek type for arrays', function () {
             var testData = [1, 2, 3, 4, 5];
 
-            let result = matchlight.match(testData, function (matchCase, _, byType) {
-                matchCase([1, 2, byType('...'), 5], ([, , , , x]) => x);
+            let result = match(testData, function (on) {
+                on([1, 2, byMatcher('...'), 5], ([, , , , x]) => x);
             });
 
             assert.equal(result, 5);
@@ -137,8 +130,8 @@ describe('matchlight', function () {
 
         it('should properly check a single-valued, typed array', function () {
             function test() {
-                return matchlight.match(['foo'], function (matchCase, _, byType) {
-                    matchCase([byType('number')], () => 'no');
+                return match(['foo'], function (on) {
+                    on([NUMBER], () => 'no');
                 });
             }
 
@@ -151,11 +144,11 @@ describe('matchlight', function () {
 
         it('should match against function arguments', function () {
             function add() {
-                return matchlight.matchArguments(arguments, function (matchCase, matchDefault, byType) {
-                    matchCase([byType('number')], ([a]) => b => a + b);
-                    matchCase([byType('number'), byType('number')], ([a, b]) => a + b);
-                    matchCase(byType('array<number>'), (values) => values.reduce((sum, value) => sum + value, 0));
-                    matchDefault(() => { throw new Error('Add can only accept numbers.'); });
+                return matchArguments(arguments, function (on, orDefault) {
+                    on([NUMBER], ([a]) => b => a + b);
+                    on([NUMBER, NUMBER], ([a, b]) => a + b);
+                    on(ARRAY(NUMBER), (values) => values.reduce((sum, value) => sum + value, 0));
+                    orDefault(() => { throw new Error('Add can only accept numbers.'); });
                 });
             }
 
@@ -168,7 +161,3 @@ describe('matchlight', function () {
     });
 
 });
-
-if (typeof global.runQuokkaMochaBdd === 'function') {
-    runQuokkaMochaBdd();
-}
