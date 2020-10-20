@@ -1,142 +1,174 @@
-# matchlight #
-## A rich pattern matching library to light up your code ##
 
-Sometimes what you need is a conditional, but sometimes what you need is something more powerful.  Pattern matching is less about whether a boolean result exists and more about the shape of the data. Matchlight provides a simple way to produce really powerful code.
+<!-- GENERATED DOCUMENT! DO NOT EDIT! -->
+# Matchlight #
+#### Rich, simple pattern matching for JavaScript ####
+
+
+## Table Of Contents ##
+
+- [Section 1: Installation](#user-content-installation)
+- [Section 2: Setting Up Matchlight](#user-content-setting-up-matchlight)
+- [Section 3: Examples](#user-content-examples)
+- [Section 4: Matchlight API](#user-content-matchlight-api)
 
 ## Installation ##
 
-```bash
-npm install matchlight --save
+Matchlight works with Node.js and web projects. Nevertheless, it is recommended that you
+use npm to install Matchlight in your project so you can easily keep it up to date. Make sure you have Node.js installed on your computer and, from your project file, run the following:
+
+`npm i matchlight`
+
+If you want to download Matchlight by hand, you can do so from the main repo:
+
+[https://github.com/cmstead/matchlight](https://github.com/cmstead/matchlight)
+
+    
+
+## Setting Up Matchlight ##
+
+For web projects, Matchlight has a minified web build available in matchlight/dist/. You can either copy it manually to your project folder, or you can add it to your build pipeline. That choice is yours to make and understand.
+
+To use Matchlight in the browser, simply include it in your page like so:
+
+`<script src="path/to/matchlight/matchlight.js"></script>`
+
+To use Matchlight in your node application, you can require it this way:
+
+```javascript
+const { match, matcher } = require('matchlight');
 ```
 
-That's it! You have everything you need.
+There are other tools and helpers with Matchlight. They can be destructured during require in the same way:
 
-## Useage ##
-
-Matchlight is exposed as a factory and must be called with Signet.  Signet is installed by default, but matchlight makes the assumption you will want to create your own types and expose them into matchlight from your application. One-time setup should look like this:
-
-```
-var matchlight = require('matchlight')(signet);
+```javascript
+const { match, matchArguments, matcher, types } = require('matchlight');
 ```
 
-Once matchlight is set up, you can use it like the following:
+    
 
-```
-// We can use matchlight to create a clean Fibonacci calculator
+## Examples ##
 
-function fib (n) {
-    return matchlight.match(n, function (matchCase, matchDefault) {
-        matchCase(0, () => 1);
-        matchCase(1, () => 1);
-        matchDefault(() => fib(n-1) + fib(n-2));
+Instead of an exhaustive listing of the Matchlight API, let's take a look at how to use Matchlight through some examples.
+
+Simple pattern matching with values and a default:
+
+```javascript
+function fibonacci(n) {
+    return match(n, function(on, onDefault) {
+        on(0, () => 1);
+        on(1, () => 1);
+        onDefault(x => fibonacci(x-1) + fibonacci(x - 2));
     });
 }
 ```
 
-It's also possible to perform more complex operations:
+Pattern matching using types:
 
-```
-// This is an example of deep-checking used to test the library:
+```javascript
+const { match, types: { NUMBER, STRING } } = require('matchlight');
 
-const testValue = { 
-    test: [1], 
-    foo: {
-        bar: 'quux'
-    }
-};
-
-let result = matchlight.match(testValue, function (matchCase, matchDefault, byType) {
-    matchCase({ test: 1 }, ({test}) => test);
-    matchCase({ test: [byType('int')], foo: { bar: 'quux' } }, ({foo: {bar}}) => bar);
-    matchDefault(() => new Error())
-});
-
-assert.equal(result, 'quux');
-
-```
-
-Array matching with '...rest' (rest type):
-
-```
-var testData = [1, 2, 3, 4, 5];
-
-let result = matchlight.match(testData, function (matchCase, _, byType) {
-    matchCase([1, 2, 3, 4], ([x]) => x);
-    matchCase([1, 2, 3, byType('...rest')], ([,,, ...rest]) => rest);
-});
-
-assert.equal(JSON.stringify(result), '[4,5]');
-```
-
-Array matching with '...' (seek type):
-
-```
-var testData = [1, 2, 3, 4, 5];
-
-let result = matchlight.match(testData, function (matchCase, _, byType) {
-    matchCase([1, 2, byType('...'), 5], ([,,,,x]) => x);
-});
-
-assert.equal(result, 5);
-```
-
-Matchlight has a matchArguments function. This means you can use matchlight to handle optional arguments, variadic and multivariate functions with ease! You can match on arguments with matchArguments like the following:
-
-```
-function add() {
-    return matchlight.matchArguments(arguments, function (matchCase, matchDefault, byType) {
-        matchCase([byType('number')], ([a]) => b => a + b);
-        matchCase([byType('number'), byType('number')], ([a, b]) => a + b);
-        matchCase(byType('array<number>'), (values) => values.reduce((sum, value) => sum + value, 0));
-        matchDefault(() => { throw new Error('Add can only accept numbers.'); });
+// parseFloat does this all, already, but it's a handy example
+function numberifyFloat(x){
+    return match(x, function(on, onDefault){
+        on(NUMBER, x => x);
+        on(STRING, x => parseFloat(x));
+        onDefault(() => NaN);
     });
 }
 ```
 
-## API ##
+Where the real power starts to shine...
 
-Matchlight has a two API endpoints: match and matchArguments. Both of these expose three functions, matchCase, matchDefault and byType which allow the developer to construct rich type mapping and behaviors.  The contracts are as follows:
+Match on data shape:
 
-- match -- `valueUnderTest:*, caseWrapper:function<function, [function], [function] => undefined> => *`
-- matchArguments -- `arguments:arguments, caseWrapper:function<function, [function], [function] => undefined> => *`
-- matchCase -- `matchValue:*, matchAction:function => undefined`
-- matchDefault -- `matchAction:function => undefined`
-- byType -- `typeToCheck:type => value:* => boolean`
-    - Special type checks
-        - '...rest' -- Rest type: checks array values until rest check, allows for any number of tail values
-        - '...' -- Seek type: seeks through array until next check passes, fails if no match is found
+```javascript
+/*
+In this example, the array must be exactly 4 elements long
+with a single number in an array as the final element
+*/
 
-## Built-in Signet Types ##
+function multiplyOnMatch(values) {
+    return match(x, function(on, onDefault){
+        on([NUMBER, , , [NUMBER]], ([x, , , [y]]) => x * y);
+        onDefault(() => 0);
+    });
+}
+```
 
-- `*`
-- `array`
-- `boolean`
-- `function`
-- `null`
-- `number`
-- `object`
-- `string`
-- `symbol`
-- `undefined`
-- `arguments` - `* -> variant<array; object>`
-- `bounded<min:number;max:number>` - `* -> number -> bounded`
-- `boundedInt<min:number;max:number>` - `* -> number -> int -> bounded -> boundedInt`
-- `boundedString<minLength:int;maxLength:int>` - `* -> string -> boundedString`
-- `composite` - `* -> composite` (Type constructor only, evaluates left to right)
-- `formattedString<regex>` - `* -> string -> formattedString`
-- `int` - `* -> number -> int`
-- `leftBounded<min:number>` - `* -> number -> leftBounded`
-- `leftBoundedInt<min:int>` - `* -> number -> int -> leftBoundedInt`
-- `not` - `* -> not` (Type constructor only)
-- `regexp` - `* -> object -> regexp`
-- `rightBounded<max:number>` - `* -> number -> rightBounded`
-- `rightBoundedInt<max:int>` - `* -> number -> int -> rightBoundedInt`
-- `tuple<type;type;type...>` - `* -> object -> array -> tuple`
-- `unorderedProduct<type;type;type...>` - `* -> object -> array -> unorderedProduct`
-- `variant<type;type;type...>` - `* -> variant`
+Get last value from an array (of any length) if it's a number:
 
-## Change Log ##
+```javascript
+const { match, types: { NUMBER, STRING } } = require('matchlight');
 
-### 1.0.0 ###
+const last = values => values[values.length - 1];
 
-Initial release
+function getLastNumberOrDefault(values, defaultNumber = 0) {
+    return match(values, function(on, onDefault) {
+        on([matcher('...'), NUMBER], (values) => last(values));
+        onDefault(() => defaultNumber);
+    });
+}
+```
+
+User defined predicate functions:
+
+```javascript
+function getValidationMessage(phoneNumber) {
+    return match(phoneNumber, function(on, onDefault){
+        on(value => (/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/).test(value),
+            () => 'Phone number is an acceptable US format');
+        onDefault(() => 'Phone number did not match any expected format');
+    });
+}
+```
+
+    
+
+## Matchlight API ##
+
+Matchlight has a relatively small API footprint. This list will be significantly less useful than the provided examples for learning how to use Matchlight. Instead consider this a reference to generate questions.
+
+### Functions and Properties ###
+
+- `match`
+    - Starts a new match expression
+    - Accepts a value to match on, and a function in which to create cases statements
+- `matchArguments`
+    - Matches on function arguments, specifically to support the `arguments` keyword
+    - Treats arguments as an array -- otherwise behaves identically to `match`
+- `matcher`
+    - Provides access to visually semantic matchers like `...` and `...rest`
+- `types`
+    - An object containing all type definitions supported by Matchlight
+
+### Matchers ###
+
+Matchers are special matching behaviors which allow the user to skip, or capture elements from an array.
+
+- `...`
+    - Seek matcher -- skips all values until next defined matching sequence is found
+- `...rest`
+    - Rest matcher -- acts as a capture matcher for all remaining elements in an array
+    - This will skip matching any elements AFTER the rest matcher. To skip some elements, use the seek matcher
+
+### Types ###
+
+Matchlight supports all of the standard JavaScript types, plus an `ANY` type which will accept any value. All types are available on the `type` property. (see functions and properties API reference) The list is as follows:
+
+- `ANY`
+- `ARRAY`
+- `BIGINT`
+- `BOOLEAN`
+- `FUNCTION`
+- `NULL`
+- `NUMBER`
+- `OBJECT`
+- `STRING`
+- `SYMBOL`
+- `UNDEFINED`
+
+    
+
+
+<!-- GENERATED DOCUMENT! DO NOT EDIT! -->
+    

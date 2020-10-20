@@ -107,7 +107,7 @@ describe('matchlight', function () {
             assert.equal(fib(10), 89);
         });
 
-        it('should treat undefined as "any"', function () {
+        it('should treat undefined (empty element) as "any" in an array', function () {
             var testData = [1, 2, 3, 4];
 
             let result = match(testData, function (on) {

@@ -65,3 +65,15 @@ function getLastNumberOrDefault(values, defaultNumber = 0) {
     });
 }
 ```
+
+User defined predicate functions:
+
+```javascript
+function getValidationMessage(phoneNumber) {
+    return match(phoneNumber, function(on, onDefault){
+        on(value => (/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/).test(value),
+            () => 'Phone number is an acceptable US format');
+        onDefault(() => 'Phone number did not match any expected format');
+    });
+}
+```
