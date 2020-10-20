@@ -14,6 +14,10 @@ function NULL(value) {
     return value === null;
 }
 
+function UNDEFINED(value) {
+    return isTypeOf('undefined', value);
+}
+
 function NUMBER(value) {
     return isTypeOf('number', value);
 }
@@ -72,5 +76,6 @@ module.exports = {
     NUMBER,
     OBJECT,
     STRING,
-    SYMBOL
+    SYMBOL,
+    UNDEFINED
 };

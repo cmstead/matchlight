@@ -1,4 +1,4 @@
-const types = require('./bin/types');
+const types = require("./bin/types");
 
 const isArray = types.ARRAY();
 
@@ -14,7 +14,7 @@ function checkObjectValues(valueChecks, values) {
     return true;
 }
 
-function buildValueChecks(matchValues) {
+function buildObjectCheck(matchValues) {
     let valueChecks = [];
     const keys = Object.keys(matchValues);
 
@@ -25,6 +25,22 @@ function buildValueChecks(matchValues) {
     }
 
     return valueChecks;
+}
+
+function buildArrayCheck(matchValues) {
+    let valueChecks = [];
+
+    for (let i = 0; i < matchValues.length; i++) {
+        valueChecks.push({ key: i, check: getCaseCheck(matchValues[i]) });
+    }
+
+    return valueChecks;
+}
+
+function buildValueChecks(matchValues) {
+    return Array.isArray(matchValues)
+        ? buildArrayCheck(matchValues)
+        : buildObjectCheck(matchValues);
 }
 
 function seekCheck(valueSet, currentCheck) {
@@ -55,7 +71,7 @@ function checkArrayValues(valueChecks, values) {
 
         seeking = isSeekingToken ? true : seeking;
 
-        if(!valuesOk) {
+        if (!valuesOk) {
             break;
         } else if (restFound) {
             valuesOk = true;
@@ -76,8 +92,9 @@ function buildStructureCheck(structureCheck, valueCheck) {
         var valueChecks = buildValueChecks(matchValues);
 
         return function (userValue) {
-            return structureCheck(userValue)
-                && valueCheck(valueChecks, userValue);
+            return (
+                structureCheck(userValue) && valueCheck(valueChecks, userValue)
+            );
         };
     };
 }
@@ -86,19 +103,22 @@ var caseActions = {
     array: buildStructureCheck(isArray, checkArrayValues),
     object: buildStructureCheck(types.OBJECT, checkObjectValues),
 
-    function: value => value,
-    primitive: a => b => a === b
-}
+    any: () => types.ANY,
+    function: (value) => value,
+    primitive: (a) => (b) => a === b,
+};
 
 function getCaseType(value) {
     if (types.FUNCTION(value)) {
-        return 'function';
+        return "function";
     } else if (isArray(value)) {
-        return 'array';
+        return "array";
     } else if (types.OBJECT(value)) {
-        return 'object';
+        return "object";
+    } else if (types.UNDEFINED(value)) {
+        return "any";
     } else {
-        return 'primitive';
+        return "primitive";
     }
 }
 
@@ -114,16 +134,13 @@ function matchCaseFactory(cases) {
     };
 }
 
-const alwaysTrue = () => true
+const alwaysTrue = () => true;
 
 function matchDefaultFactory(cases) {
     var wasCalled = false;
 
     return function (action) {
-        throwOn(
-            wasCalled,
-            'Cannot match on more than one default'
-        );
+        throwOn(wasCalled, "Cannot match on more than one default");
 
         wasCalled = true;
 
@@ -144,20 +161,22 @@ function getPassingCase(cases, valueUnderTest) {
 }
 
 function buildActionType(idProperty) {
-    function actionType() { return false; }
+    function actionType() {
+        return false;
+    }
 
     Object.defineProperty(actionType, idProperty, {
         writeable: false,
-        value: true
+        value: true,
     });
 
     return actionType;
 }
 
 var actionIdMap = {
-    '...rest': 'isRest',
-    '...': 'isSeek'
-}
+    "...rest": "isRest",
+    "...": "isSeek",
+};
 
 function matcher(type) {
     var actionId = actionIdMap[type];
@@ -167,10 +186,7 @@ function matcher(type) {
 function runMatcher(caseWrapper, valueUnderTest) {
     const cases = [];
 
-    caseWrapper(
-        matchCaseFactory(cases),
-        matchDefaultFactory(cases)
-    );
+    caseWrapper(matchCaseFactory(cases), matchDefaultFactory(cases));
 
     return getPassingCase(cases, valueUnderTest);
 }
@@ -184,25 +200,21 @@ function throwOn(condition, errorMessage) {
 function match(valueUnderTest, caseWrapper) {
     var passingCase = runMatcher(caseWrapper, valueUnderTest);
 
-
     throwOn(
         types.NULL(passingCase),
-        'All cases failed, perhaps a default could be provided.'
+        "All cases failed, perhaps a default could be provided."
     );
 
     return passingCase[1](valueUnderTest);
 }
 
 function matchArguments(argumentsObj, caseWrapper) {
-    return match(
-        Array.prototype.slice.call(argumentsObj, 0),
-        caseWrapper
-    );
+    return match(Array.prototype.slice.call(argumentsObj, 0), caseWrapper);
 }
 
 module.exports = {
     matcher: matcher,
     match: match,
     matchArguments: matchArguments,
-    types: types
-}
+    types: types,
+};

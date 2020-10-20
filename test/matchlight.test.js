@@ -107,6 +107,17 @@ describe('matchlight', function () {
             assert.equal(fib(10), 89);
         });
 
+        it('should treat undefined as "any"', function () {
+            var testData = [1, 2, 3, 4];
+
+            let result = match(testData, function (on) {
+                on([1, , , 4], ([,,,x]) => x);
+                on([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
+            });
+
+            assert.deepEqual(result, 4);
+        });
+
         it('should support rest type for arrays', function () {
             var testData = [1, 2, 3, 4, 5];
 

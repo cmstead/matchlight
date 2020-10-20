@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha ./test/**/*.test.js",
-    "build": "browserify -p tinyify ./index.js -o ./dist/matchlight.js"
+    "build-dist": "browserify -p tinyify ./index.js -o ./dist/matchlight.js",
+    "build-readme": "booklisp ./readme-source/readme.md ./README.md",
+    "build": "npm test & npm run build-dist & npm run build-readme"
   },
   "repository": {
     "type": "git",
