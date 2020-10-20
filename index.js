@@ -63,10 +63,8 @@ function checkArrayValues(valueChecks, values) {
 
             break;
         } else if (valueSet.length > 0 && !isSeekingToken) {
-            const checkAction = getCheckAction(checkTuple, valueSet, seeking);
+            valuesOk = getCheckAction(checkTuple, valueSet, seeking)();
             seeking = false;
-
-            valuesOk = checkAction()
         }
     }
 
