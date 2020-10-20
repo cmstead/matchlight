@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha ./test/**/*.test.js",
-    "build": "browserify -p tinify ./index.js"
+    "build": "browserify -p tinyify ./index.js -o ./dist/matchlight.js"
   },
   "repository": {
     "type": "git",
