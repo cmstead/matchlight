@@ -1,11 +1,17 @@
 const types = require('./bin/types');
 
+const isArray = types.ARRAY();
+
 function checkObjectValues(valueChecks, values) {
-    function checkValue(checkDef) {
-        return checkDef.check(values[checkDef.key]);
+    for (let i = 0; i < valueChecks.length; i++) {
+        const { check, key } = valueChecks[i];
+
+        if (!check(values[key])) {
+            return false;
+        }
     }
 
-    return valueChecks.filter(checkValue).length === valueChecks.length;
+    return true;
 }
 
 function buildValueChecks(matchValues) {
@@ -24,7 +30,7 @@ function buildValueChecks(matchValues) {
 function seekCheck(valueSet, currentCheck) {
     var valueOk = false;
 
-    while (!valueOk) {
+    while (!valueOk && valueSet.length > 0) {
         valueOk = currentCheck(valueSet.shift());
     }
 
@@ -38,57 +44,58 @@ function getCheckAction(checkTuple, valueSet, seeking) {
 }
 
 function checkArrayValues(valueChecks, values) {
-    var valueSet = values.slice(0);
-    var valuesOk = true;
-    var seeking = false;
+    let valueSet = values.slice(0);
+    let valuesOk = true;
+    let seeking = false;
 
     for (let i = 0; i < valueChecks.length; i++) {
         const checkTuple = valueChecks[i];
-        var restFound = checkTuple.check.isRest;
+        const restFound = checkTuple.check.isRest;
+        const isSeekingToken = checkTuple.check.isSeek;
 
-        seeking = checkTuple.check.isSeek ? true : seeking;
+        seeking = isSeekingToken ? true : seeking;
 
-        if (valuesOk && valueSet.length > 0 && !checkTuple.check.isSeek) {
-            var checkAction = getCheckAction(checkTuple, valueSet, seeking);
+        if(!valuesOk) {
+            break;
+        } else if (restFound) {
+            valuesOk = true;
+            valueSet.length = 0;
+
+            break;
+        } else if (valueSet.length > 0 && !isSeekingToken) {
+            const checkAction = getCheckAction(checkTuple, valueSet, seeking);
             seeking = false;
-            valuesOk = restFound ? true : checkAction();
-            valueSet.length = restFound ? 0 : valueSet.length;
+
+            valuesOk = checkAction()
         }
     }
 
     return valuesOk && valueSet.length === 0;
 }
 
-function buildArrayCheck(matchValues) {
-    var valueChecks = buildValueChecks(matchValues);
+function buildStructureCheck(structureCheck, valueCheck) {
+    return function (matchValues) {
+        var valueChecks = buildValueChecks(matchValues);
 
-    return function (userValue) {
-        return types.ARRAY()(userValue)
-            && checkArrayValues(valueChecks, userValue);
+        return function (userValue) {
+            return structureCheck(userValue)
+                && valueCheck(valueChecks, userValue);
+        };
     };
 }
 
-function buildObjectCheck(matchValues) {
-    var valueChecks = buildValueChecks(matchValues);
-
-    return function (userValue) {
-        return types.OBJECT(userValue)
-            && checkObjectValues(valueChecks, userValue);
-    }
-}
-
 var caseActions = {
-    array: buildArrayCheck,
-    object: buildObjectCheck,
+    array: buildStructureCheck(isArray, checkArrayValues),
+    object: buildStructureCheck(types.OBJECT, checkObjectValues),
 
     function: value => value,
     primitive: a => b => a === b
 }
 
 function getCaseType(value) {
-    if(types.FUNCTION(value)) {
+    if (types.FUNCTION(value)) {
         return 'function';
-    } else if (types.ARRAY()(value)) {
+    } else if (isArray(value)) {
         return 'array';
     } else if (types.OBJECT(value)) {
         return 'object';
@@ -115,8 +122,11 @@ function matchDefaultFactory(cases) {
     var wasCalled = false;
 
     return function (action) {
-        var errorMessage = 'Cannot match on more than one default';
-        throwOnFailure(!wasCalled, errorMessage);
+        throwOn(
+            wasCalled,
+            'Cannot match on more than one default'
+        );
+
         wasCalled = true;
 
         cases.push([alwaysTrue, action]);
@@ -127,7 +137,7 @@ function getPassingCase(cases, valueUnderTest) {
     for (let i = 0; i < cases.length; i++) {
         const caseTuple = cases[i];
 
-        if(caseTuple[0](valueUnderTest)) {
+        if (caseTuple[0](valueUnderTest)) {
             return caseTuple;
         }
     }
@@ -167,29 +177,34 @@ function runMatcher(caseWrapper, valueUnderTest) {
     return getPassingCase(cases, valueUnderTest);
 }
 
-function throwOnFailure(condition, errorMessage) {
-    if (!condition) {
+function throwOn(condition, errorMessage) {
+    if (condition) {
         throw new Error(errorMessage);
     }
 }
 
-function matchFn(valueUnderTest, caseWrapper) {
+function match(valueUnderTest, caseWrapper) {
     var passingCase = runMatcher(caseWrapper, valueUnderTest);
 
-    var errorMessage = 'All cases failed, perhaps a default could be provided.';
-    throwOnFailure(!types.NULL(passingCase), errorMessage);
+
+    throwOn(
+        types.NULL(passingCase),
+        'All cases failed, perhaps a default could be provided.'
+    );
 
     return passingCase[1](valueUnderTest);
 }
 
 function matchArguments(argumentsObj, caseWrapper) {
-    var args = Array.prototype.slice.call(argumentsObj, 0);
-    return matchFn(args, caseWrapper);
+    return match(
+        Array.prototype.slice.call(argumentsObj, 0),
+        caseWrapper
+    );
 }
 
 module.exports = {
-    matcher,
-    match: matchFn,
-    matchArguments,
-    types
+    matcher: matcher,
+    match: match,
+    matchArguments: matchArguments,
+    types: types
 }

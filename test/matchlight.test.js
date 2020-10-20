@@ -128,6 +128,16 @@ describe('matchlight', function () {
             assert.equal(result, 5);
         });
 
+        it('should not have an infinite loop ', function () {
+            var testData = [1, 2, 3, 4, 5];
+
+            let result = match(testData, function (on) {
+                on([1, 2, matcher('...'), 5], ([, , , , x]) => x);
+            });
+
+            assert.equal(result, 5);
+        });
+
         it('should properly check a single-valued, typed array', function () {
             function test() {
                 return match(['foo'], function (on) {
