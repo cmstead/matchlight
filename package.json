@@ -1,7 +1,7 @@
 {
   "name": "matchlight",
   "version": "1.2.8",
-  "description": "A rich pattern matching library to light up your code",
+  "description": "Pattern matching -- conditional logic for humans",
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha ./test/**/*.test.js",
