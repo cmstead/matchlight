@@ -128,7 +128,7 @@ function getCaseCheck(value) {
     return caseActions[caseType](value);
 }
 
-function matchCaseFactory(cases) {
+function onCaseFactory(cases) {
     return function (caseValue, action) {
         cases.push([getCaseCheck(caseValue), action]);
     };
@@ -136,7 +136,7 @@ function matchCaseFactory(cases) {
 
 const alwaysTrue = () => true;
 
-function matchDefaultFactory(cases) {
+function onDefaultFactory(cases) {
     var wasCalled = false;
 
     return function (action) {
@@ -186,7 +186,7 @@ function matcher(type) {
 function runMatcher(caseWrapper, valueUnderTest) {
     const cases = [];
 
-    caseWrapper(matchCaseFactory(cases), matchDefaultFactory(cases));
+    caseWrapper(onCaseFactory(cases), onDefaultFactory(cases));
 
     return getPassingCase(cases, valueUnderTest);
 }

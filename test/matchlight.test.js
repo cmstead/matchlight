@@ -12,20 +12,20 @@ describe('matchlight', function () {
     describe('match', function () {
 
         it('should resolve first passing behavior', function () {
-            let result = match('foo', on => {
-                on(() => false, () => 'ha!');
-                on(() => true, () => 'woo!');
-                on(() => true, () => 'blammo!');
+            let result = match('foo', onCase => {
+                onCase(() => false, () => 'ha!');
+                onCase(() => true, () => 'woo!');
+                onCase(() => true, () => 'blammo!');
             });
 
             assert.equal(result, 'woo!');
         });
 
         it('should throw an error if no cases pass', function () {
-            function failingCase(on) {
-                on(() => false, () => 'ha!');
-                on(() => false, () => 'woo!');
-                on(() => false, () => 'blammo!');
+            function failingCase(onCase) {
+                onCase(() => false, () => 'ha!');
+                onCase(() => false, () => 'woo!');
+                onCase(() => false, () => 'blammo!');
             }
 
             assert.throws(
@@ -34,10 +34,10 @@ describe('matchlight', function () {
         });
 
         it('should call default action if no cases pass and default exists', function () {
-            let result = match('foo', (on, orDefault) => {
-                on(() => false, () => 'ha!');
-                on(() => false, () => 'woo!');
-                on(() => false, () => 'blammo!');
+            let result = match('foo', (onCase, orDefault) => {
+                onCase(() => false, () => 'ha!');
+                onCase(() => false, () => 'woo!');
+                onCase(() => false, () => 'blammo!');
                 orDefault(() => 'default!');
             });
 
@@ -45,10 +45,10 @@ describe('matchlight', function () {
         });
 
         it('should call default action if no cases pass and default exists', function () {
-            function caseWrapper(on, orDefault) {
-                on(() => false, () => 'ha!');
-                on(() => false, () => 'woo!');
-                on(() => false, () => 'blammo!');
+            function caseWrapper(onCase, orDefault) {
+                onCase(() => false, () => 'ha!');
+                onCase(() => false, () => 'woo!');
+                onCase(() => false, () => 'blammo!');
                 orDefault(() => 'default!');
                 orDefault(() => 'default2!');
             }
@@ -59,9 +59,9 @@ describe('matchlight', function () {
         });
 
         it('should call action on type match', function () {
-            let result = match(-3, function (on, orDefault) {
-                on(NUMBER, (value) => `${value} is a number`);
-                on(STRING, (value) => `${value} is a string`);
+            let result = match(-3, function (onCase, orDefault) {
+                onCase(NUMBER, (value) => `${value} is a number`);
+                onCase(STRING, (value) => `${value} is a string`);
                 orDefault(() => 'I got to the default');
             });
 
@@ -69,17 +69,17 @@ describe('matchlight', function () {
         });
 
         it('should match against a primitive value', function () {
-            let result = match(2, function (on) {
-                on(2, () => 'two');
+            let result = match(2, function (onCase) {
+                onCase(2, () => 'two');
             });
 
             assert.equal(result, 'two');
         });
 
         it('should match against an array of values', function () {
-            let result = match([4, [5]], function (on) {
-                on([4], ([x]) => x);
-                on([NUMBER, [5]], ([, x]) => x[0]);
+            let result = match([4, [5]], function (onCase) {
+                onCase([4], ([x]) => x);
+                onCase([NUMBER, [5]], ([, x]) => x[0]);
             });
 
             assert.equal(result, 5);
@@ -87,9 +87,9 @@ describe('matchlight', function () {
 
         it('should match against an object', function () {
             let testData = { test: [1], foo: { bar: 'quux' } }
-            let result = match(testData, function (on) {
-                on({ test: 1 }, ({ test }) => test);
-                on({ test: [NUMBER], foo: { bar: 'quux' } }, ({ foo }) => foo.bar);
+            let result = match(testData, function (onCase) {
+                onCase({ test: 1 }, ({ test }) => test);
+                onCase({ test: [NUMBER], foo: { bar: 'quux' } }, ({ foo }) => foo.bar);
             });
 
             assert.equal(result, 'quux');
@@ -97,9 +97,9 @@ describe('matchlight', function () {
 
         it('should allow for fibonacci computation', function () {
             function fib(n) {
-                return match(n, function (on, orDefault) {
-                    on(0, () => 1);
-                    on(1, () => 1);
+                return match(n, function (onCase, orDefault) {
+                    onCase(0, () => 1);
+                    onCase(1, () => 1);
                     orDefault(() => fib(n - 1) + fib(n - 2));
                 });
             }
@@ -110,9 +110,9 @@ describe('matchlight', function () {
         it('should treat undefined (empty element) as "any" in an array', function () {
             var testData = [1, 2, 3, 4];
 
-            let result = match(testData, function (on) {
-                on([1, , , 4], ([,,,x]) => x);
-                on([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
+            let result = match(testData, function (onCase) {
+                onCase([1, , , 4], ([,,,x]) => x);
+                onCase([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
             });
 
             assert.deepEqual(result, 4);
@@ -121,9 +121,9 @@ describe('matchlight', function () {
         it('should support rest type for arrays', function () {
             var testData = [1, 2, 3, 4, 5];
 
-            let result = match(testData, function (on) {
-                on([1, 2, 3, 4], ([x]) => x);
-                on([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
+            let result = match(testData, function (onCase) {
+                onCase([1, 2, 3, 4], ([x]) => x);
+                onCase([1, 2, 3, matcher('...rest')], ([, , , ...rest]) => rest);
             });
 
             assert.equal(JSON.stringify(result), '[4,5]');
@@ -132,8 +132,8 @@ describe('matchlight', function () {
         it('should support seek type for arrays', function () {
             var testData = [1, 2, 3, 4, 5];
 
-            let result = match(testData, function (on) {
-                on([1, 2, matcher('...'), 5], ([, , , , x]) => x);
+            let result = match(testData, function (onCase) {
+                onCase([1, 2, matcher('...'), 5], ([, , , , x]) => x);
             });
 
             assert.equal(result, 5);
@@ -142,8 +142,8 @@ describe('matchlight', function () {
         it('should not have an infinite loop ', function () {
             var testData = [1, 2, 3, 4, 5];
 
-            let result = match(testData, function (on) {
-                on([1, 2, matcher('...'), 5], ([, , , , x]) => x);
+            let result = match(testData, function (onCase) {
+                onCase([1, 2, matcher('...'), 5], ([, , , , x]) => x);
             });
 
             assert.equal(result, 5);
@@ -151,8 +151,8 @@ describe('matchlight', function () {
 
         it('should properly check a single-valued, typed array', function () {
             function test() {
-                return match(['foo'], function (on) {
-                    on([NUMBER], () => 'no');
+                return match(['foo'], function (onCase) {
+                    onCase([NUMBER], () => 'no');
                 });
             }
 
@@ -165,10 +165,10 @@ describe('matchlight', function () {
 
         it('should match against function arguments', function () {
             function add() {
-                return matchArguments(arguments, function (on, orDefault) {
-                    on([NUMBER], ([a]) => b => a + b);
-                    on([NUMBER, NUMBER], ([a, b]) => a + b);
-                    on(ARRAY(NUMBER), (values) => values.reduce((sum, value) => sum + value, 0));
+                return matchArguments(arguments, function (onCase, orDefault) {
+                    onCase([NUMBER], ([a]) => b => a + b);
+                    onCase([NUMBER, NUMBER], ([a, b]) => a + b);
+                    onCase(ARRAY(NUMBER), (values) => values.reduce((sum, value) => sum + value, 0));
                     orDefault(() => { throw new Error('Add can only accept numbers.'); });
                 });
             }

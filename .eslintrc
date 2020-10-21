@@ -12,7 +12,8 @@
     },
     "rules": {
         "no-undef": 1,
-        "no-console": 1
+        "no-console": 1,
+        "no-sparse-arrays": 0
     },
     "globals": {
         "describe": false,

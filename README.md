@@ -102,9 +102,9 @@ Simple pattern matching with values and a default:
 
 ```javascript
 function fibonacci(n) {
-    return match(n, function(on, onDefault) {
-        on(0, () => 1);
-        on(1, () => 1);
+    return match(n, function(onCase, onDefault) {
+        onCase(0, () => 1);
+        onCase(1, () => 1);
         onDefault(x => fibonacci(x-1) + fibonacci(x - 2));
     });
 }
@@ -117,9 +117,9 @@ const { match, types: { NUMBER, STRING } } = require('matchlight');
 
 // parseFloat does this all, already, but it's a handy example
 function numberifyFloat(x){
-    return match(x, function(on, onDefault){
-        on(NUMBER, x => x);
-        on(STRING, x => parseFloat(x));
+    return match(x, function(onCase, onDefault){
+        onCase(NUMBER, x => x);
+        onCase(STRING, x => parseFloat(x));
         onDefault(() => NaN);
     });
 }
@@ -136,8 +136,8 @@ with a single number in an array as the final element
 */
 
 function multiplyOnMatch(values) {
-    return match(x, function(on, onDefault){
-        on([NUMBER, , , [NUMBER]], ([x, , , [y]]) => x * y);
+    return match(x, function(onCase, onDefault){
+        onCase([NUMBER, , , [NUMBER]], ([x, , , [y]]) => x * y);
         onDefault(() => 0);
     });
 }
@@ -151,8 +151,8 @@ const { match, types: { NUMBER, STRING } } = require('matchlight');
 const last = values => values[values.length - 1];
 
 function getLastNumberOrDefault(values, defaultNumber = 0) {
-    return match(values, function(on, onDefault) {
-        on([matcher('...'), NUMBER], (values) => last(values));
+    return match(values, function(onCase, onDefault) {
+        onCase([matcher('...'), NUMBER], (values) => last(values));
         onDefault(() => defaultNumber);
     });
 }
@@ -162,8 +162,8 @@ User defined predicate functions:
 
 ```javascript
 function getValidationMessage(phoneNumber) {
-    return match(phoneNumber, function(on, onDefault){
-        on(value => (/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/).test(value),
+    return match(phoneNumber, function(onCase, onDefault){
+        onCase(value => (/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/).test(value),
             () => 'Phone number is an acceptable US format');
         onDefault(() => 'Phone number did not match any expected format');
     });
