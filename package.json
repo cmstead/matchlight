@@ -1,6 +1,6 @@
 {
   "name": "matchlight",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Pattern matching -- conditional logic for humans",
   "main": "index.js",
   "scripts": {
