@@ -106,6 +106,7 @@ var caseActions = {
     any: () => types.ANY,
     function: (value) => value,
     primitive: (a) => (b) => a === b,
+    regex: pattern => value => pattern.test(value)
 };
 
 function getCaseType(value) {
@@ -113,6 +114,12 @@ function getCaseType(value) {
         return "function";
     } else if (isArray(value)) {
         return "array";
+    } else if (
+        types.OBJECT(value) &&
+        value !== null &&
+        typeof value.test === "function"
+    ) {
+        return 'regex';
     } else if (types.OBJECT(value)) {
         return "object";
     } else if (types.UNDEFINED(value)) {

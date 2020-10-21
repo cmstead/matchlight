@@ -76,6 +76,14 @@ describe('matchlight', function () {
             assert.equal(result, 'two');
         });
 
+        it('should handle regex as a first-class citizen', function () {
+            let result = match('This is a test', function (onCase) {
+                onCase(/test/, () => 'Okay!');
+            });
+
+            assert.equal(result, 'Okay!');
+        });
+
         it('should match against an array of values', function () {
             let result = match([4, [5]], function (onCase) {
                 onCase([4], ([x]) => x);

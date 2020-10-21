@@ -66,14 +66,27 @@ function getLastNumberOrDefault(values, defaultNumber = 0) {
 }
 ```
 
-User defined predicate functions:
+Regular expressions:
 
 ```javascript
 function getValidationMessage(phoneNumber) {
     return match(phoneNumber, function(onCase, onDefault){
-        onCase(value => (/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/).test(value),
+        onCase(/\([0-9]{3}\) [0-9]{3}-[0-9]{4}/,
             () => 'Phone number is an acceptable US format');
         onDefault(() => 'Phone number did not match any expected format');
+    });
+}
+```
+
+User defined functions:
+
+```javascript
+function getNumberType(value) {
+    return match(value, function(onCase, onDefault) {
+        onCase(value => !NUMBER(value), () => 'nan');
+        onCase(value => Math.abs(value) === Infinity, () => 'infinity');
+        onCase(value => Math.floor(value) === value, () => 'int');
+        onDefault(() => 'float');
     });
 }
 ```
